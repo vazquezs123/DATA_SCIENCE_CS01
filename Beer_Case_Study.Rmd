@@ -15,6 +15,11 @@ c. Your client tells you that there is a problem with the raw file. One name was
 d. Upon finding the misspelled name, please remove this particular observation, as theclient says it's redundant. Save the remaining dataset as an object: y2016 
 ```{r}
 library(dplyr)
+library(knitr)
+library(data.table)
+library(doBy)
+library(ggplot2)
+library(reshape2)
 
 # set working directory
 data_dir = "C:\\Users\\vazqu\\Documents\\SMU\\data_science\\case_study_repo\\DATA_SCIENCE_CS01\\data"
@@ -31,20 +36,56 @@ setwd(working_dir)
 ###################
 # import Beers.csv data and append column names
 beer_file <- paste(data_dir,"\\Beers.csv", sep = "")
-beer_df <- read.csv(beer_file, sep=",", header = FALSE)
+beer_df <- read.csv(beer_file, sep=",", header = FALSE, na.strings = c("","NA"))
 names(beer_df) <- c("Beer_Name", "Beer_ID", "ABV", "IBU", "Brewery_ID","Style", "Ounces")
 
-# import Brewery.csv
+# import Brewery.csv and get number of breweries in each state
 brew_file <- paste(data_dir, "\\Breweries.csv", sep = "")
-brew_df <- read.csv(brew_file, sep=",", header = FALSE)
+brew_df <- read.csv(brew_file, sep=",", header = FALSE, na.string = c("","NA"))
 names(brew_df) <- c("Brewery_ID", "Brewery_Name", "Brewery_City","Brewery_State")
+brew_state_count <- data.table(table(brew_df$Brewery_State))
+brewery_state_count <- brewery_state_count[1:51]
 
-# merge datasets
-beer_brew_df <- merge( x = beer_df, y = brew_df, all = FALSE, by = "Brewery_ID")
-#beer_brew_df <- beer_brew_df[complete.cases(beer_brew_df),]
+# merge datasets and print first and last 6 observations
+beer_brew_df <- merge(x = beer_df, y = brew_df, by = "variable",all = FALSE)
+beer_brew_df <- data.table(beer_brew_df)
+head(beer_brew_df, 6)
+tail(beer_brew_df,6)
 
-# Get Brewery Count
-brewery_state_count <- count(beer_brew_df, Brewery_ID, Brewery_State)
-brewery_state_count <- as.data.frame(brewery_state_count)
-names(brewery_state_count) <- c("Brewery_ID", "Brewery_State", "Brewery_State_Count")
+# report the number of NA's in each column
+na_count <- colSums(is.na(beer_brew_df))
+print("Initial NA count per data column is: ")
+print(na_count)
+
+# get and show only complete rows
+beer_brew_df <- beer_brew_df[complete.cases(beer_brew_df),]
+na_count <- colSums(is.na(beer_brew_df))
+print("NA count after incomplete row removal: ")
+print(na_count)
+
+# get median alcohol content (ABV) and international bitterness units (IBU)
+median_abv <- aggregate(ABV ~ Brewery_State, data = beer_brew_df, median)
+median_ibu <- aggregate(IBU ~ Brewery_State, data = beer_brew_df, median)
+melted_median_abv <- melt(median_abv, median, id.vars="Brewery_State")
+melted_median_ibu <- melt(median_ibu)
+melted_median_abv_ibu <- rbind(melted_median_abv, melted_median_ibu)
+
+# plot 
+ggplot(melted_median_abv_ibu, aes(x=variable, y=value, fill=factor(Brewery_State))) +
+  geom_bar(stat="identity", position="dodge") +
+  xlab("") + ylab("") +
+   scale_y_continuous(sec.axis = sec_axis(~./10, name="Median ABV%"))
+
+# find state with max ABV beer
+print("The below row has the max ABV for its corresponding State.")
+print(beer_brew_df[which.max(beer_brew_df$ABV)])
+
+# find state with max IBU beer
+print("The below row has the max IBU for its corresponding State.")
+print(beer_brew_df[which.max(beer_brew_df$IBU)])
+
+# display summary of ABV
+summary(beer_brew_df$ABV)
+  
+```
 

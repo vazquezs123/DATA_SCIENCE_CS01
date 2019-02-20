@@ -1,0 +1,50 @@
+---
+title: "HW_04"
+author: "Steven Vazquez"
+date: "February 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## 1. Data Munging (30 points): Utilize yob2016.txt for this question. This file is a series of popular children's names born in the year 2016 in the United States. It consists of three columns with a first name, a gender, and the amount of children given that name. However, the data is raw and will need cleaning to make it tidy and usable.
+  a. First, import the .txt file into R so you can process it. Keep in mind this is not a CSV file. You might have to open the file to see what you're dealing with. Assign the resulting data frame to an object, df, that consists of three columns with humanreadable column names for each.
+b. Display the summary and structure of df
+c. Your client tells you that there is a problem with the raw file. One name was entered twice and misspelled. The client cannot remember which name it is; there are thousands he saw! But he did mention he accidentally put three y's at the end of the name. Write an R command to figure out which name it is and display it.
+d. Upon finding the misspelled name, please remove this particular observation, as theclient says it's redundant. Save the remaining dataset as an object: y2016 
+```{r}
+library(dplyr)
+
+# set working directory
+data_dir = "C:\\Users\\vazqu\\Documents\\SMU\\data_science\\case_study_repo\\DATA_SCIENCE_CS01\\data"
+
+working_dir = "C:\\Users\\vazqu\\Documents\\SMU\\data_science\\case_study_repo\\DATA_SCIENCE_CS01"
+
+# strip whitespaces and set directory
+data_dir <- trimws(data_dir)
+working_dir <- trimws(working_dir)
+setwd(working_dir)
+
+###################
+# Data Imputation
+###################
+# import Beers.csv data and append column names
+beer_file <- paste(data_dir,"\\Beers.csv", sep = "")
+beer_df <- read.csv(beer_file, sep=",", header = FALSE)
+names(beer_df) <- c("Beer_Name", "Beer_ID", "ABV", "IBU", "Brewery_ID","Style", "Ounces")
+
+# import Brewery.csv
+brew_file <- paste(data_dir, "\\Breweries.csv", sep = "")
+brew_df <- read.csv(brew_file, sep=",", header = FALSE)
+names(brew_df) <- c("Brewery_ID", "Brewery_Name", "Brewery_City","Brewery_State")
+
+# merge datasets
+beer_brew_df <- merge( x = beer_df, y = brew_df, all = FALSE, by = "Brewery_ID")
+#beer_brew_df <- beer_brew_df[complete.cases(beer_brew_df),]
+
+# Get Brewery Count
+brewery_state_count <- count(beer_brew_df, Brewery_ID, Brewery_State)
+brewery_state_count <- as.data.frame(brewery_state_count)
+names(brewery_state_count) <- c("Brewery_ID", "Brewery_State", "Brewery_State_Count")
+

@@ -36,18 +36,19 @@ setwd(working_dir)
 ###################
 # import Beers.csv data and append column names
 beer_file <- paste(data_dir,"\\Beers.csv", sep = "")
-beer_df <- read.csv(beer_file, sep=",", header = FALSE, na.strings = c("","NA"))
+#beer_df <- read.csv(beer_file, sep=",", header = FALSE, na.strings = c("","NA"))
+beer_df <- read.csv(beer_file, sep=",", header = FALSE)
 names(beer_df) <- c("Beer_Name", "Beer_ID", "ABV", "IBU", "Brewery_ID","Style", "Ounces")
 
 # import Brewery.csv and get number of breweries in each state
 brew_file <- paste(data_dir, "\\Breweries.csv", sep = "")
-brew_df <- read.csv(brew_file, sep=",", header = FALSE, na.string = c("","NA"))
+brew_df <- read.csv(brew_file, sep=",", header = FALSE)
 names(brew_df) <- c("Brewery_ID", "Brewery_Name", "Brewery_City","Brewery_State")
-brew_state_count <- data.table(table(brew_df$Brewery_State))
+brewery_state_count <- data.table(table(brew_df$Brewery_State))
 brewery_state_count <- brewery_state_count[1:51]
 
 # merge datasets and print first and last 6 observations
-beer_brew_df <- merge(x = beer_df, y = brew_df, by = "variable",all = FALSE)
+beer_brew_df <- merge(x = beer_df, y = brew_df, by = "Brewery_ID",all = FALSE)
 beer_brew_df <- data.table(beer_brew_df)
 head(beer_brew_df, 6)
 tail(beer_brew_df,6)
@@ -62,11 +63,11 @@ beer_brew_df <- beer_brew_df[complete.cases(beer_brew_df),]
 na_count <- colSums(is.na(beer_brew_df))
 print("NA count after incomplete row removal: ")
 print(na_count)
-
-# get median alcohol content (ABV) and international bitterness units (IBU)
-median_abv <- aggregate(ABV ~ Brewery_State, data = beer_brew_df, median)
-median_ibu <- aggregate(IBU ~ Brewery_State, data = beer_brew_df, median)
-melted_median_abv <- melt(median_abv, median, id.vars="Brewery_State")
+beer_brew_df <- as.data.table(beer_brew_df)
+# get median alcohol content (ABV) and international bitterness units (IBU)beer_brew_df <- final
+median_abv <- summaryBy(ABV ~ Brewery_State, data = beer_brew_df, FUN=list(median))
+median_ibu <- summaryBy(IBU ~ Brewery_State, data = beer_brew_df, FUN=list(median))
+melted_median_abv <- melt(median_abv)
 melted_median_ibu <- melt(median_ibu)
 melted_median_abv_ibu <- rbind(melted_median_abv, melted_median_ibu)
 

@@ -38,8 +38,8 @@ tail(beer_brew_df,6)
 colSums(is.na(beer_brew_df))
 
 # 4. get median alcohol content (ABV) and international bitterness units (IBU)
-median_abv <- summaryBy(ABV ~ Brewery_State, data = beer_brew_df, FUN=list(median))
-median_ibu <- summaryBy(IBU ~ Brewery_State, data = beer_brew_df, FUN=list(median))
+median_abv <- summaryBy(ABV ~ Brewery_State, data = beer_brew_df, FUN=list(median), na.rm=TRUE)
+median_ibu <- summaryBy(IBU ~ Brewery_State, data = beer_brew_df, FUN=list(median), na.rm=TRUE)
 median_abv_ibu <- merge(median_abv, median_ibu, by = "Brewery_State")
 
 ggplot(median_abv_ibu) + 

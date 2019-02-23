@@ -1,0 +1,78 @@
+---
+title: "Case Study 1"
+author: "John Partee"
+date: "February 22, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+#Breweries and Beer, an analysis.
+I was provided a dataset of breweries, and a dataset of beer, which will be analyzed to answer questions asked at the tail end of this document. In this document, I will address how this data was cleaned up, and analyzed, before presenting answers.
+
+##Import the data:
+```{r import}
+beers <- read.csv("Beers.csv")
+breweries <- read.csv("Breweries.csv")
+```
+
+##First, how many breweries are in each state?
+```{r perState}
+table(breweries$State)
+```
+
+##Merge the data by brewery ID, so we can move on with analysis.
+```{r merge}
+beersAndBreweries <- merge(beers, breweries, by.x = 'Brewery_id', by.y = 'Brew_ID')
+#"Names" will be present in both, here is how I fixed that.
+dfNames <- names(beersAndBreweries)
+#Looking at the original data, col 2 was names for beers, and col 2 was names in breweries. 2+6 (-1 for brew_ID, which disappeared in the merge) = 8
+dfNames[2] <- "Beer_Names"
+dfNames[8] <- "Brewery_Names"
+names(beersAndBreweries) <- dfNames
+```
+
+##Ensure it merged right:
+```{r checkIt}
+head(beersAndBreweries, 6)
+tail(beersAndBreweries, 6)
+```
+The merge was evidently successful, and the columns have useful names.
+
+##There were a number of missing observations in this data, as reported below:
+```{r nas}
+apply(beersAndBreweries, 2, function(x){sum(is.na(x))})
+```
+The IBU's and ABV's are the two columns missing values.
+
+##What is the median and mean ABV and IBU per state?
+To do this, I'll use dplyr, which has better support for grouping 
+```{r groupwiseMedian}
+library(dplyr)
+groupedbnb <- group_by(beersAndBreweries, State)
+medAbv <- summarize(groupedbnb, medABV = median(ABV, na.rm = TRUE))
+medIBU <- summarize(groupedbnb, medIBU = median(IBU, na.rm = TRUE))
+
+library(ggplot2)
+ggplot(medAbv, aes(x = State, y = medABV)) +
+    geom_bar(stat = "identity", fill = "#5EA9BE") +
+    coord_cartesian(ylim = range(medAbv$medABV, na.rm = TRUE)) +
+    theme(panel.background = element_rect(fill = "#FDF8E2")) +
+    ggtitle("Median ABV By State") +
+    ylab("Median ABV")
+
+ggplot(medIBU, aes(x = State, y = medIBU)) +
+    geom_bar(stat = "identity", fill = "#F3BFB3") +
+    coord_cartesian(ylim = range(medIBU$medIBU, na.rm = TRUE)) +
+    theme(panel.background = element_rect(fill = "#FDF8E2")) +
+    ggtitle("Median IBU By State") +
+    ylab("Median IBU")
+
+```
+
+
+
+
+
+

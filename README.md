@@ -1,4 +1,4 @@
-# Beer Case Study - Team Roman-Greco
+# Beer Case Study - Team Greco-Roman
 
 This repository stores all code and files used to explore, answer, and present our findings for the below questions:
   1. How many breweries are present in each state?

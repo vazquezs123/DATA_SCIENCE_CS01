@@ -3,18 +3,19 @@ title: "Case Study 1"
 author: "John Partee"
 date: "February 22, 2019"
 output: html_document
+keep_md: TRUE
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 11, fig.height = 7, fig.align = "center")
 ```
 #Breweries and Beer, an analysis.
 I was provided a dataset of breweries, and a dataset of beer, which will be analyzed to answer questions asked at the tail end of this document. In this document, I will address how this data was cleaned up, and analyzed, before presenting answers.
 
 ##Import the data:
 ```{r import}
-beers <- read.csv("Beers.csv")
-breweries <- read.csv("Breweries.csv")
+beers <- read.csv("data/Beers.csv")
+breweries <- read.csv("data/Breweries.csv")
 ```
 
 ##First, how many breweries are in each state?
@@ -42,37 +43,77 @@ The merge was evidently successful, and the columns have useful names.
 
 ##There were a number of missing observations in this data, as reported below:
 ```{r nas}
-apply(beersAndBreweries, 2, function(x){sum(is.na(x))})
+colSums(is.na(beersAndBreweries))
 ```
 The IBU's and ABV's are the two columns missing values.
 
 ##What is the median and mean ABV and IBU per state?
-To do this, I'll use dplyr, which has better support for grouping 
+To do this, I'll use dplyr, which has better support for grouping, and ggplot2 for visualization.
 ```{r groupwiseMedian}
+#Group it all!
 library(dplyr)
 groupedbnb <- group_by(beersAndBreweries, State)
+#get statistics by state
 medAbv <- summarize(groupedbnb, medABV = median(ABV, na.rm = TRUE))
 medIBU <- summarize(groupedbnb, medIBU = median(IBU, na.rm = TRUE))
-
+#plot it
 library(ggplot2)
 ggplot(medAbv, aes(x = State, y = medABV)) +
     geom_bar(stat = "identity", fill = "#5EA9BE") +
-    coord_cartesian(ylim = range(medAbv$medABV, na.rm = TRUE)) +
-    theme(panel.background = element_rect(fill = "#FDF8E2")) +
-    ggtitle("Median ABV By State") +
-    ylab("Median ABV")
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Median ABV By State", y = "Median ABV")
 
 ggplot(medIBU, aes(x = State, y = medIBU)) +
     geom_bar(stat = "identity", fill = "#F3BFB3") +
-    coord_cartesian(ylim = range(medIBU$medIBU, na.rm = TRUE)) +
-    theme(panel.background = element_rect(fill = "#FDF8E2")) +
-    ggtitle("Median IBU By State") +
-    ylab("Median IBU")
-
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Median IBU By State", y = "Median IBU")
 ```
 
+##Which state has the most alcoholic beer?
+```{r mostABV}
+#The highest ABV is:
+highestABV <- max(beersAndBreweries$ABV, na.rm = TRUE)
+highestABV
+#The state with the highest ABV beer is:
+as.character(beersAndBreweries$State[which(beersAndBreweries$ABV == highestABV)])
+```
+Colorado!
 
+##Which stat has the most bitter (Highest IBU) beer?
+```{r mostIBU}
+#The highest ABV is:
+highestIBU <- max(beersAndBreweries$IBU, na.rm = TRUE)
+highestIBU
+#The state with the highest ABV beer is:
+as.character(beersAndBreweries$State[which(beersAndBreweries$IBU == highestIBU)])
+```
+Oregon!
 
+##Some further statistics on ABV:
+```{r ABVSumStats}
+summary(beersAndBreweries$ABV)
+#This is easier to see in a boxplot:
+ggplot(beersAndBreweries, aes(y = ABV)) +
+    geom_boxplot(fill = "#5EA9BE") +
+    theme(panel.background = element_rect(fill = "#FDF8E2"))
+```
+A boxplot is a better way to see all of this.
 
+#Is there a correlation between IBU and ABV?
+The client asked for a scatter plot, but a linear model and correlation percentage helps here too!
+```{r correlateABVIBU}
+ggplot(beersAndBreweries, aes(x = ABV, y = IBU)) + 
+    geom_point(color = "blue3") +
+    geom_smooth(method = "lm")  +
+    theme(panel.background = element_rect(fill = "#FDF8E2"),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "IBU vs ABU")
+cor(beersAndBreweries$ABV, beersAndBreweries$IBU, use = "complete.obs")
+```
+As we can see, there is a 67% correlation between ABV and IBU. The plot also visually suggests that generally the more bitter a beer is, the higher the alcohol per volume.
 
 

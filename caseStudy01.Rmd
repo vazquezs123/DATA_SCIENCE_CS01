@@ -97,8 +97,8 @@ Oregon!
 ```{r ABVSumStats}
 summary(beersAndBreweries$ABV)
 #This is easier to see in a boxplot:
-ggplot(beersAndBreweries, aes(y = ABV)) +
-    geom_boxplot(fill = "#5EA9BE") +
+ggplot(beersAndBreweries, aes(x = ABV)) +
+    geom_histogram(fill = "#5EA9BE") +
     theme(panel.background = element_rect(fill = "#FDF8E2"))
 ```
 A boxplot is a better way to see all of this.

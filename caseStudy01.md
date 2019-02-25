@@ -222,8 +222,8 @@ The client asked for a scatter plot, but a linear model and correlation coeffici
 
 ```r
 ggplot(beersAndBreweries, aes(x = ABV, y = IBU)) + 
-    geom_jitter(color = "blue3") +
-    geom_smooth(method = "lm")  +
+    geom_jitter(color = "#F3BFB3") +
+    geom_smooth(method = "lm", color = "#5EA9BE")  +
     theme(panel.background = element_rect(fill = "#FDF8E2"),
           plot.title = element_text(hjust = 0.5)) +
     labs(title = "IBU vs ABV")
